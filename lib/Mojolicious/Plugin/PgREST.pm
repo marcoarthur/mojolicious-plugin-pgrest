@@ -12,7 +12,7 @@ sub register($self, $app, $config) {
     $app->hook(
         openapi_routes_added => sub( $openapi, $routes ) {
             for my $route (@$routes) {
-                $route->to( cb => sub($c) { $self->_do_proxy } );
+                $route->to( cb => sub($c) { $self->_do_proxy($c) } );
             }
         }
     );
@@ -32,8 +32,8 @@ sub _load_openapi($self, $app, $config) {
     $p->validator->formats->{'character varying'} = sub { return undef };
 }
 
-sub _do_proxy( $self ) {
-    my $c = $self->openapi->valid_input or return;
+sub _do_proxy( $self, $c ) {
+    $c->openapi->valid_input or return;
     $c->render_later;
 
     my $input   = $c->validation->output;
