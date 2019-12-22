@@ -42,11 +42,16 @@
       },
       "runtime" : {
          "requires" : {
+            "DDP" : "0",
+            "Mojo::Base" : "0",
+            "Mojolicious::Plugin::OpenAPI" : "0",
             "perl" : "5.022"
          }
       },
       "test" : {
          "requires" : {
+            "Mojolicious::Lite" : "0",
+            "Test::Mojo" : "0",
             "Test::More" : "0.98"
          }
       }
