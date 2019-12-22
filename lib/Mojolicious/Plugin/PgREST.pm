@@ -12,7 +12,7 @@ sub register($self, $app, $config) {
     $app->hook(
         openapi_routes_added => sub( $openapi, $routes ) {
             for my $route (@$routes) {
-                $route->to( cb => sub($c) { $c->_do_proxy } );
+                $route->to( cb => sub($c) { $self->_do_proxy } );
             }
         }
     );
