@@ -24,7 +24,15 @@ sub _load_openapi($self, $app, $config) {
     my $json = $app->ua->get($config->{ openApi })->result->json or
     die "Can't get the schema";
 
-    my $p = $app->plugin( 'OpenAPI' => { url => $json } );
+    my $p = $app->plugin( 'OpenAPI' => { 
+            url => $json,
+            add_preflighted_routes => 1,
+        }
+    );
+
+    $app->defaults(
+        openapi_cors_allowed_origins => [ qr{^https?://localhost:?(\d+)?} ]
+    );
 
     # Stop warnings with these format values common found in PGREST
     ## no critic Subroutines::ProhibitExplicitReturnUndef
@@ -33,7 +41,7 @@ sub _load_openapi($self, $app, $config) {
 }
 
 sub _do_proxy( $self, $c ) {
-    $c->openapi->valid_input or return;
+    $c->openapi->cors_exchange->openapi->valid_input or return;
     $c->render_later;
 
     my $input   = $c->validation->output;
