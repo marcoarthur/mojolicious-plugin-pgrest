@@ -87,12 +87,13 @@ sub _do_proxy ( $self, $c ) {
         }
     }
 
+    # make pgREST call and saves to cache
     $c->ua->start_p($tx)->then(
         sub( $tx ) {
             my $res = $tx->result;
             $c->app->log->debug("Calling pgREST ($method): $uri");
 
-            if ( $key && $res->json ) {
+            if ( $res->json ) {
                 $self->cache->set(
                     $key,
                     {
@@ -100,7 +101,7 @@ sub _do_proxy ( $self, $c ) {
                         status => $res->code
                     },
                     "30 minutes"
-                );
+                ) if $key;
                 $c->render( json => $res->json, status => $res->code );
             } else {
                 $c->render( text => 'No response', status => $res->code );
