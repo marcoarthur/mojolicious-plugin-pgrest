@@ -2,37 +2,42 @@ package Mojolicious::Plugin::PgREST;
 use 5.022;
 use Mojo::Base 'Mojolicious::Plugin', -signatures;
 use Mojolicious::Plugin::OpenAPI;
+use CHI;
+use Digest::MD5 qw(md5);
+
 use constant DEBUG => $ENV{MOJO_PGREST_DEBUG} || 0;
 use DDP;
 
 our $VERSION = "0.01";
 
-sub register($self, $app, $config) {
+has cache => sub { state $cache = CHI->new( driver => 'Memory', global => 1 ); };
+
+sub register ( $self, $app, $config ) {
+
     # Set hook to point to the proxy method
     $app->hook(
-        openapi_routes_added => sub( $openapi, $routes ) {
+        openapi_routes_added => sub ( $openapi, $routes ) {
             for my $route (@$routes) {
                 $route->to( cb => sub($c) { $self->_do_proxy($c) } );
             }
         }
     );
 
-    $self->_load_openapi($app, $config);
+    $self->_load_openapi( $app, $config );
 }
 
-sub _load_openapi($self, $app, $config) {
-    my $json = $app->ua->get($config->{ openApi })->result->json or
-    die "Can't get the schema";
+sub _load_openapi ( $self, $app, $config ) {
+    my $json = $app->ua->get( $config->{openApi} )->result->json
+      or die "Can't get the schema";
 
-    my $p = $app->plugin( 'OpenAPI' => { 
-            url => $json,
+    my $p = $app->plugin(
+        'OpenAPI' => {
+            url                    => $json,
             add_preflighted_routes => 1,
         }
     );
 
-    $app->defaults(
-        openapi_cors_allowed_origins => [ qr{^https?://localhost:?(\d+)?} ]
-    );
+    $app->defaults( openapi_cors_allowed_origins => [qr{^https?://localhost:?(\d+)?}] );
 
     # Stop warnings with these format values common found in PGREST
     ## no critic Subroutines::ProhibitExplicitReturnUndef
@@ -40,7 +45,7 @@ sub _load_openapi($self, $app, $config) {
     $p->validator->formats->{'character varying'} = sub { return undef };
 }
 
-sub _do_proxy( $self, $c ) {
+sub _do_proxy ( $self, $c ) {
     $c->openapi->cors_exchange->openapi->valid_input or return;
     $c->render_later;
 
@@ -54,7 +59,7 @@ sub _do_proxy( $self, $c ) {
     my $schemes = $c->openapi->spec("/schemes");
 
     my $uri = Mojo::URL->new;
-    $uri->scheme($schemes->[0]);
+    $uri->scheme( $schemes->[0] );
     $uri->host($host);
     $uri->path($name);
     $uri->query($params) if $params && %$params;
@@ -68,14 +73,33 @@ sub _do_proxy( $self, $c ) {
     # copy auth headers
     $tx->req->headers->authorization($auth) if $auth;
     $tx->req->headers->accept('application/json');
-    $c->app->log->debug("Calling pgREST ($method): $uri");
+
+    #TODO: Calculate request id based on uri + headers
+    my $key = md5($uri->to_string);
+    my $val = $self->cache->get( $key );
+
+    # found in cache
+    if ( defined $val ) {
+        $c->render( json => $val->{json}, status => $val->{status} );
+        return;
+    }
 
     $c->ua->start_p($tx)->then(
         sub( $tx ) {
             my $res = $tx->result;
-            if ( $res->json ) { 
-                $c->render( json => $res->json,    status => $res->code );
-            } else { 
+            $c->app->log->debug("Calling pgREST ($method): $uri");
+
+            if ( $res->json ) {
+                $self->cache->set(
+                    $key,
+                    {
+                        json   => $res->json,
+                        status => $res->code
+                    },
+                    "30 minutes"
+                );
+                $c->render( json => $res->json, status => $res->code );
+            } else {
                 $c->render( text => 'No response', status => $res->code );
             }
         }
@@ -91,7 +115,7 @@ __END__
 =head1 NAME
 
 Mojolicious::Plugin::PgREST - This plugins enables Mojo to proxy calls to a
-PgREST (actually any openAPI service) and optionally instance memcaching the
+PgREST (actually any openAPI service) and optionally caching the
 request.
 
 =head1 SYNOPSIS
@@ -104,13 +128,13 @@ request.
 
 Mojolicious::Plugin::PgREST enables a Mojo application to access PgREST or any
 open API service to be proxied. In this manner you can build your Mojolicious
-Application with other OpenAPI services (provide it shares the specifications).
+Application with other OpenAPI services (provided it shares the specifications).
 
-Your Mojolicious App can for example cache it, actually this plugin can cache
+Your Mojolicious App can, for example cache it, actually this plugin can cache
 it by default, just flag it in configuration C<< cache => 1 >>
 
 It uses L<Mojolicious::Plugin::OpenAPI> to read the specification and mount
-routes. And uses L<Cache::Memcached::Fast> for caching
+routes. And uses L<CHI> for caching.
 
 =head1 LICENSE
 
