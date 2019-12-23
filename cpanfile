@@ -1,4 +1,6 @@
+requires 'CHI';
 requires 'DDP';
+requires 'Digest::MD5';
 requires 'Mojo::Base';
 requires 'Mojolicious::Plugin::OpenAPI';
 requires 'perl', '5.022';
