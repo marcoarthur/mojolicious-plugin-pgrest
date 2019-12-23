@@ -118,27 +118,31 @@ __END__
 
 =head1 NAME
 
-Mojolicious::Plugin::PgREST - This plugins enables Mojo to proxy calls to a
-PgREST (actually any openAPI service) and optionally caching the
-request.
+Mojolicious::Plugin::PgREST - Enables Mojo to proxy calls to a PgREST (actually
+any openAPI service) and cache the requests.
 
 =head1 SYNOPSIS
 
     use Mojolicious::Plugin::PgREST;
-    plugin 'proxy', { openApi => 'your.openapi/spec' };
+    plugin PgREST => { openApi => 'your.openapi/spec' };
     
-
 =head1 DESCRIPTION
 
 Mojolicious::Plugin::PgREST enables a Mojo application to access PgREST or any
 open API service to be proxied. In this manner you can build your Mojolicious
 Application with other OpenAPI services (provided it shares the specifications).
 
-Your Mojolicious App can, for example cache it, actually this plugin can cache
-it by default, just flag it in configuration C<< cache => 1 >>
+Your Mojolicious App can, for example, cache it, ( actually, it does by default )
 
 It uses L<Mojolicious::Plugin::OpenAPI> to read the specification and mount
-routes. And uses L<CHI> for caching.
+routes. And uses L<CHI> for in memory caching, defaults to 30 minutes cache
+expiration.
+
+=head1 CAVEATS
+
+This plugins attempts to read the OpenAPI specification in json format. All
+responses will only be in json format, disregarding the possible other formats
+accepted from the spec.
 
 =head1 LICENSE
 

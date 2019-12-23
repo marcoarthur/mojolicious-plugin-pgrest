@@ -1,5 +1,5 @@
 {
-   "abstract" : "This plugins enables Mojo to proxy calls to a PgREST (actually any openAPI service) and optionally caching the request.",
+   "abstract" : "Enables Mojo to proxy calls to a PgREST (actually any openAPI service) and cache the requests.",
    "author" : [
       "Marco Arthur <arthurpbs@gmail.com>"
    ],
