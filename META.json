@@ -42,7 +42,9 @@
       },
       "runtime" : {
          "requires" : {
+            "CHI" : "0",
             "DDP" : "0",
+            "Digest::MD5" : "0",
             "Mojo::Base" : "0",
             "Mojolicious::Plugin::OpenAPI" : "0",
             "perl" : "5.022"

@@ -74,14 +74,17 @@ sub _do_proxy ( $self, $c ) {
     $tx->req->headers->authorization($auth) if $auth;
     $tx->req->headers->accept('application/json');
 
-    #TODO: Calculate request id based on uri + headers
-    my $key = md5($uri->to_string);
-    my $val = $self->cache->get( $key );
+    # calculate request id based on uri + headers for db read operations
+    my $key = undef;
+    if ( $method eq 'GET' ) {
+        $key = $auth ? md5($uri->to_string . $auth) : md5($uri->to_string);
+        my $val = $self->cache->get( $key );
 
-    # found in cache
-    if ( defined $val ) {
-        $c->render( json => $val->{json}, status => $val->{status} );
-        return;
+        # found in cache
+        if ( defined $val ) {
+            $c->render( json => $val->{json}, status => $val->{status} );
+            return;
+        }
     }
 
     $c->ua->start_p($tx)->then(
@@ -89,7 +92,7 @@ sub _do_proxy ( $self, $c ) {
             my $res = $tx->result;
             $c->app->log->debug("Calling pgREST ($method): $uri");
 
-            if ( $res->json ) {
+            if ( $key && $res->json ) {
                 $self->cache->set(
                     $key,
                     {
