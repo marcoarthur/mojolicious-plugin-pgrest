@@ -37,7 +37,10 @@ sub _load_openapi ( $self, $app, $config ) {
         }
     );
 
-    $app->defaults( openapi_cors_allowed_origins => [qr{^https?://localhost:?(\d+)?}] );
+    # Allow localhost to be CORS by default
+    my $cors = $config->{cors} || [ qr{^https?://localhost:?(\d+)?} ];
+
+    $app->defaults( openapi_cors_allowed_origins => $cors );
 
     # Stop warnings with these format values common found in PGREST
     ## no critic Subroutines::ProhibitExplicitReturnUndef

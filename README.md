@@ -1,3 +1,4 @@
+[![Kritika Status](https://kritika.io/users/marcoarthur/repos/marcoarthur+mojolicious-plugin-pgrest/heads/master/status.svg)](https://kritika.io/users/marcoarthur/repos/marcoarthur+mojolicious-plugin-pgrest) [![Coverage Status](https://img.shields.io/coveralls/marcoarthur/mojolicious-plugin-pgrest/master.svg?style=flat)](https://coveralls.io/r/marcoarthur/mojolicious-plugin-pgrest?branch=master)
 # NAME
 
 Mojolicious::Plugin::PgREST - Enables Mojo to proxy calls to a PgREST (actually
