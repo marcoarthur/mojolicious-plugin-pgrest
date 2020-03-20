@@ -48,8 +48,6 @@ package main;
 use Test::More;
 use Test::Mojo;
 
-use Mojolicious -signatures;
-
 my $pg = MyPgRest->new;
 $pg->log->level('fatal');
 
