@@ -1,19 +1,30 @@
 language: perl
+perl:
+  - "5.22"
+  - "5.28"
+  - "5.30"
+  - "blead"
+cache:
+  directories:
+    - $HOME/perl5
 matrix:
   include:
-    - perl: "5.12"
-      dist: trusty
-    - perl: "5.14"
-      dist: trusty
-    - perl: "5.16"
-      dist: trusty
-    - perl: "5.18"
-      dist: trusty
-    - perl: "5.20"
-      dist: trusty
-    - perl: "5.22"
-    - perl: "5.24"
-    - perl: "5.26"
-    - perl: "5.28"
-    - perl: "5.30"
+    - perl: 5.30
+      env: COVERAGE=1   # enables coverage reporting (coveralls by default),
+                        # or COVERAGE=report_name to use a specific report
+                        # module
+  allow_failures:
+    - perl: blead
+before_install:
+  - eval $(curl https://travis-perl.github.io/init) --auto
 
+install:
+  - cpan-install --deps
+  - cpan-install --coverage
+
+before_script:
+  - coverage-setup
+script:
+  - prove -l -v
+after_success:
+  - coverage-report
