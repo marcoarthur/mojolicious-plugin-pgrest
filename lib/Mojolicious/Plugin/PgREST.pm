@@ -28,7 +28,7 @@ sub register ( $self, $app, $config ) {
 
 sub _load_openapi ( $self, $app, $config ) {
     my $json = $app->ua->get( $config->{openApi} )->result->json
-      or die "Can't get the schema";
+      or die "Can't get the schema " . $config->{openApi};
 
     my $p = $app->plugin(
         'OpenAPI' => {
