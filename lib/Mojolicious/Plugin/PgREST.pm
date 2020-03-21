@@ -5,14 +5,22 @@ use Mojolicious::Plugin::OpenAPI;
 use CHI;
 use Digest::MD5 qw(md5);
 
-use constant DEBUG => $ENV{MOJO_PGREST_DEBUG} || 0;
+use constant {
+    DEBUG => $ENV{MOJO_PGREST_DEBUG} || 0, 
+};
+
 use DDP;
 
 our $VERSION = "0.01";
 
 has cache => sub { state $cache = CHI->new( driver => 'Memory', global => 1 ); };
+has cache_time => "30 minutes";
 
 sub register ( $self, $app, $config ) {
+    # Set cache time
+    if ( defined $config->{cache_time} ) {
+        $self->cache_time($config->{cache_time});
+    }
 
     # Set hook to point to the proxy method
     $app->hook(
@@ -103,7 +111,7 @@ sub _do_proxy ( $self, $c ) {
                         json   => $res->json,
                         status => $res->code
                     },
-                    "30 minutes"
+                    $self->cache_time
                 ) if $key;
                 $c->render( json => $res->json, status => $res->code );
             } else {
