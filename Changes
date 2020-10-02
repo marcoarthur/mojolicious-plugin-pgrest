@@ -2,6 +2,9 @@ Revision history for Perl extension Mojolicious-Plugin-PgREST
 
 {{$NEXT}}
 
+0.04 2020-10-02T16:02:28Z
+    - Minor fix
+
 0.03 2020-09-27T21:19:05Z
 
     - Update

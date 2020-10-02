@@ -9,7 +9,7 @@ use constant { DEBUG => $ENV{MOJO_PGREST_DEBUG} || 0, };
 
 use DDP;
 
-our $VERSION = "0.03";
+our $VERSION = "0.04";
 
 has cache      => sub { state $cache = CHI->new( driver => 'Memory', global => 1 ); };
 has cache_time => "30 minutes";
