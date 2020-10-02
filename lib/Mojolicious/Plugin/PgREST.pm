@@ -5,22 +5,19 @@ use Mojolicious::Plugin::OpenAPI;
 use CHI;
 use Digest::MD5 qw(md5);
 
-use constant {
-    DEBUG => $ENV{MOJO_PGREST_DEBUG} || 0, 
-};
+use constant { DEBUG => $ENV{MOJO_PGREST_DEBUG} || 0, };
 
 use DDP;
 
 our $VERSION = "0.03";
 
-has cache => sub { state $cache = CHI->new( driver => 'Memory', global => 1 ); };
+has cache      => sub { state $cache = CHI->new( driver => 'Memory', global => 1 ); };
 has cache_time => "30 minutes";
 
 sub register ( $self, $app, $config ) {
+
     # Set cache time
-    if ( defined $config->{cache_time} ) {
-        $self->cache_time($config->{cache_time});
-    }
+    $self->cache_time( $config->{cache_time} ) if defined $config->{cache_time};
 
     # Set hook to point to the proxy method
     $app->hook(
@@ -46,7 +43,7 @@ sub _load_openapi ( $self, $app, $config ) {
     );
 
     # Allow localhost to be CORS by default
-    my $cors = $config->{cors} || [ qr{^https?://localhost:?(\d+)?} ];
+    my $cors = $config->{cors} || [qr{^https?://localhost:?(\d+)?}];
 
     $app->defaults( openapi_cors_allowed_origins => $cors );
 
@@ -88,8 +85,8 @@ sub _do_proxy ( $self, $c ) {
     # calculate request id based on uri + headers for db read operations
     my $key = undef;
     if ( $method eq 'GET' ) {
-        $key = $auth ? md5($uri->to_string . $auth) : md5($uri->to_string);
-        my $val = $self->cache->get( $key );
+        $key = $auth ? md5( $uri->to_string . $auth ) : md5( $uri->to_string );
+        my $val = $self->cache->get($key);
 
         # found in cache
         if ( defined $val ) {
